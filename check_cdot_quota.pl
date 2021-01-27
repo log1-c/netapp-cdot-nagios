@@ -98,9 +98,12 @@ while(defined($next)){
 
     foreach my $getQuota ( $output->child_get("attributes-list")->children_get() ) {
 	# Disk limit is in KB
-	my $diskLimit = $getQuota->child_get_string('disk-limit') * 1024;
-	next if ($diskLimit eq "-" or $diskLimit == 0 );
-	# Also in KB
+	my $diskLimit = $getQuota->child_get_string('disk-limit');
+	
+    next if ($diskLimit eq "-" or $diskLimit == 0 );
+	
+    # Also in KB
+    $diskLimit *= 1024;
 	my $diskUsed = $getQuota->child_get_string('disk-used') * 1024;
 	my $fileLimit = $getQuota->child_get_string('file-limit');
 	my $filesUsed = $getQuota->child_get_string('files-used');
@@ -154,17 +157,29 @@ foreach my $vol ( keys(%perfdata) ) {
 
 if(scalar(@crit_msg) ){
     print "CRITICAL: ";
-    print join ("; ", @crit_msg, @warn_msg, @ok_msg);
+    print join (". ", @crit_msg);
+    if(scalar(@warn_msg)){
+        print "\nWARNING: ";
+        print join (", ", @warn_msg);
+    }
+    if(scalar(@ok_msg)){
+        print "\nOK: ";
+        print join (", ", @ok_msg);
+    }
     print "|$perfdatastr\n";
     exit 2;
 } elsif(scalar(@warn_msg) ){
     print "WARNING: ";
-    print join ("; ", @crit_msg, @warn_msg, @ok_msg);
+    print join ("; ", @warn_msg);
+    if(scalar(@ok_msg)){
+        print "\nOK: ";
+        print join (", ", @ok_msg);
+    }
     print "|$perfdatastr\n";
     exit 1;
 } elsif(scalar(@ok_msg) ){
     print "OK: ";
-    print join ("; ", @crit_msg, @warn_msg, @ok_msg);
+    print join (", ", @ok_msg);
     print "|$perfdatastr\n";
     exit 0;
 } else {
